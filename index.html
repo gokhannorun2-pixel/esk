@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body {
+  background-color: black;
+  color: #00ff00;
+  font-family: monospace;
+  padding: 20px;
+}
+button {
+  margin-top: 10px;
+  padding: 5px 10px;
+}
+input {
+  padding: 5px;
+}
+.box {
+  border: 1px solid #00ff00;
+  padding: 15px;
+  margin-top: 15px;
+}
+</style>
+</head>
+<body>
+
+<h2>E.S.K. Kimlik Doğrulama</h2>
+
+<input type="text" id="kodInput" placeholder="E.S.K numaranızı giriniz">
+<button onclick="kontrolEt()">Sorgula</button>
+
+<div id="sonuc" class="box"></div>
+<div id="adminDiv" class="box"></div>
+
+<script>
+// Varsayılan veri
+const varsayilanVeri = {
+  "01101": { isim: "Yiğit", yas: 7, mevki: "Orta Saha", odul: "1 adet", suc: "gol çalma, haksız serbest atış", gol: 4 },
+  "10111": { isim: "Yağız", yas: 10, mevki: "Forvet", odul: "2 adet", suc: "saltanat devri başlatması", gol: 0 },
+  "01001": { isim: "Gökhan", yas: 11, gorev: "Hakem", odul: "Yok", suc: "hakemlikten çıkarıldı", gol: 0 }
+};
+
+// localStorage’dan veri yükle, yoksa varsayılanı kullan
+let veri = JSON.parse(localStorage.getItem("esk_veri"));
+if (!veri) {
+  veri = varsayilanVeri;
+  localStorage.setItem("esk_veri", JSON.stringify(veri));
+}
+
+// localStorage’a kaydet
+function kaydetLocal() {
+  localStorage.setItem("esk_veri", JSON.stringify(veri));
+}
+
+// Kayıt göster
+function kontrolEt() {
+  const kod = document.getElementById("kodInput").value;
+  const sonuc = document.getElementById("sonuc");
+  const adminDiv = document.getElementById("adminDiv");
+  adminDiv.innerHTML = "";
+
+  if (veri[kod]) {
+    const kayit = veri[kod];
+    sonuc.innerHTML = `
+      <b>>> KAYIT BULUNDU:</b><br><br>
+      İSİM: ${kayit.isim}<br>
+      YAŞ: ${kayit.yas}<br>
+      MEVKİ/GÖREV: ${kayit.mevki || kayit.gorev}<br>
+      ÖDÜL: ${kayit.odul}<br>
+      SUÇLARI: ${kayit.suc}<br>
+      GOL: ${kayit.gol}
+    `;
+
+    adminDiv.innerHTML = `
+      <b>>> YÖNETİCİ GİRİŞİ:</b><br><br>
+      Yönetici kodunu giriniz: <input type="password" id="adminKod" placeholder="Kod">
+      <button onclick="yoneticiGiris()">Giriş</button>
+    `;
+  } else {
+    sonuc.innerHTML = "[!] HATA: Geçersiz numara!";
+  }
+}
+
+// Yönetici giriş
+function yoneticiGiris() {
+  const adminKod = document.getElementById("adminKod").value;
+  const adminDiv = document.getElementById("adminDiv");
+
+  if (adminKod === "1234") {
+    let formHTML = "<b>>> YÖNETİCİ MODU:</b><br><br>";
+    for (let kod in veri) {
+      const kayit = veri[kod];
+      formHTML += `
+        <u>Kod: ${kod}</u><br>
+        İsim: <input type="text" id="isim_${kod}" value="${kayit.isim || ""}"><br>
+        Yaş: <input type="number" id="yas_${kod}" value="${kayit.yas || ""}"><br>
+        Mevki/Görev: <input type="text" id="mevki_${kod}" value="${kayit.mevki || kayit.gorev || ""}"><br>
+        Ödül: <input type="text" id="odul_${kod}" value="${kayit.odul || ""}"><br>
+        Suçlar: <input type="text" id="suc_${kod}" value="${kayit.suc || ""}"><br>
+        Gol: <input type="number" id="gol_${kod}" value="${kayit.gol || 0}"><br><br>
+      `;
+    }
+    formHTML += `<button onclick="kayitGuncelle()">Kaydet</button>`;
+    adminDiv.innerHTML = formHTML;
+  } else {
+    adminDiv.innerHTML = "[!] HATA: Yönetici kodu yanlış!";
+  }
+}
+
+// Kaydet ve localStorage’a yaz
+function kayitGuncelle() {
+  for (let kod in veri) {
+    veri[kod].isim = document.getElementById("isim_" + kod).value;
+    veri[kod].yas = parseInt(document.getElementById("yas_" + kod).value) || 0;
+    veri[kod].mevki = document.getElementById("mevki_" + kod).value;
+    veri[kod].odul = document.getElementById("odul_" + kod).value;
+    veri[kod].suc = document.getElementById("suc_" + kod).value;
+    veri[kod].gol = parseInt(document.getElementById("gol_" + kod).value) || 0;
+  }
+
+  kaydetLocal();
+  alert("Tüm kayıtlar güncellendi ve sayfa yenilense bile korunuyor!");
+  kontrolEt();
+}
+</script>
+
+</body>
+</html>
